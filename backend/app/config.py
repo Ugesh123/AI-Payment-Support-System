@@ -16,3 +16,7 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
 
 settings = Settings()
+import os
+
+print("DATABASE_URL =", os.getenv("DATABASE_URL"))
+print("JWT_SECRET_KEY =", os.getenv("JWT_SECRET_KEY"))
