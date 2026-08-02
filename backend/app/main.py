@@ -28,7 +28,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://ai-payment-support.vercel.app",
+        "https://ai-payment-support-system-lons9784r-ugesh123s-projects.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
