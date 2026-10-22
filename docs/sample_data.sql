@@ -1,8 +1,8 @@
 -- Sample test data for AI Payment Support & Transaction Portal
 -- Run AFTER database_schema.sql
 -- Note: password_hash values below are placeholders. Register real
--- users through the API so bcrypt hashes are generated correctly,
--- or replace these with actual bcrypt hashes before inserting.
+-- users through the API (or set ADMIN_EMAIL / ADMIN_PASSWORD) so
+-- valid password hashes are generated.
 
 USE payment_support_db;
 
