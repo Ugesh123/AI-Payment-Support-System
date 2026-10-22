@@ -1,7 +1,4 @@
-# Python
-backend/venv/
-__pycache__/
-*.pyc
+# Secrets
 .env
 
 # Node
@@ -14,3 +11,6 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Go
+backend/server

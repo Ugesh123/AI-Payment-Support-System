@@ -2,7 +2,9 @@
 
 A full-stack fintech-inspired payment support platform where users can securely register, simulate payments, manage transactions, request refunds, raise support tickets, and monitor payment activity through an interactive dashboard.
 
-This project demonstrates full-stack software engineering using **FastAPI, React, MySQL, JWT Authentication, SQLAlchemy, and REST APIs**.
+Built with a **Golang** backend, a **React** frontend and **MySQL**, using JWT authentication and REST APIs.
+
+**At a glance:** Go backend · 24 REST endpoints · 26 automated tests (run with the race detector) · React + Tailwind frontend · MySQL
 
 ---
 
@@ -25,12 +27,12 @@ This project demonstrates full-stack software engineering using **FastAPI, React
 ## 🛠 Tech Stack
 
 ### Backend
-- Python
-- FastAPI
-- SQLAlchemy
-- MySQL
-- JWT Authentication
-- ReportLab
+- Go 1.22+ (standard library `net/http` router)
+- MySQL with `database/sql` and parameterised SQL (`go-sql-driver/mysql`)
+- JWT authentication (`golang-jwt/jwt`)
+- PBKDF2-SHA256 password hashing
+- PDF receipts built with the Go standard library
+- `go test` with the race detector, GitHub Actions CI, Docker
 
 ### Frontend
 - React.js
@@ -44,17 +46,31 @@ This project demonstrates full-stack software engineering using **FastAPI, React
 
 ---
 
+## 🧠 Engineering Highlights
+
+- **No floating-point money:** amounts are stored as whole paise, so `0.10 + 0.20` is always exactly `0.30`.
+- **No duplicate refunds:** a unique constraint means 10 simultaneous refund requests for one payment create exactly 1 refund (tested).
+- **Safe admin updates:** status changes use compare-and-set (`UPDATE ... WHERE status = ?`), so if two admins act at once, only one wins and the other gets `409 Conflict`.
+- **State machines:** Refund `REQUESTED → PROCESSING → COMPLETED`; Ticket `OPEN → IN_PROGRESS → CLOSED`; only `PENDING` transactions can change. Every other move is rejected.
+- **Ownership checks:** a user can never see another user's payments, refunds or tickets.
+- **Production basics:** graceful shutdown, server timeouts, panic recovery and JSON request logs.
+
+---
+
 ## 📂 Project Structure
 
 ```text
 AI-Payment-Support-System/
 │
-├── backend/
-├── frontend/
-├── screenshots/
-├── docs/
+├── backend/                 # Go REST API
+│   ├── cmd/server/          # entry point
+│   └── internal/            # api, service, domain, store, auth, money, receipt, config
+├── frontend/                # React app
+├── docs/                    # database schema, sample data, Postman collection
 └── README.md
 ```
+
+Request flow: `api` (HTTP handlers) → `service` (business rules) → `store` (MySQL).
 
 ---
 
@@ -62,30 +78,28 @@ AI-Payment-Support-System/
 
 ### Backend
 
+Requires Go 1.22 or newer.
+
 ```bash
 cd backend
-
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-pip install -r requirements.txt
-
-uvicorn app.main:app --reload
+go mod tidy
+cp .env.example .env        # then set JWT_SECRET_KEY and DATABASE_URL
+go run ./cmd/server
 ```
 
 Backend runs on
 
 ```
-http://localhost:8000
+http://localhost:8080
 ```
 
-Swagger API
+Run the tests
 
+```bash
+go test -race ./...
 ```
-http://localhost:8000/docs
-```
+
+Tip: leave `DATABASE_URL` empty to run without MySQL (data is kept in memory and lost on restart).
 
 ---
 
@@ -112,42 +126,19 @@ http://localhost:5173
 ### Backend (.env)
 
 ```env
-DATABASE_URL=your_database_url
-JWT_SECRET_KEY=your_secret_key
-JWT_ALGORITHM=HS256
+JWT_SECRET_KEY=your_long_secret_key
+DATABASE_URL=mysql://user:password@localhost:3306/payment_support_db
+PORT=8080
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+CORS_ORIGINS=http://localhost:5173
+ADMIN_EMAIL=admin@example.com      # optional: creates an admin on startup
+ADMIN_PASSWORD=change-me           # optional
 ```
 
 ### Frontend (.env)
 
 ```env
-VITE_API_BASE_URL=http://127.0.0.1:8000
-```
-
----
-
-## 📸 Screenshots
-
-Add screenshots inside the **screenshots** folder.
-
-Recommended screenshots:
-
-- Login
-- Register
-- Dashboard
-- Transactions
-- Refund Request
-- Support Tickets
-- AI Assistant
-- Admin Dashboard
-- Swagger API
-
-Example:
-
-```md
-## Dashboard
-
-![Dashboard](screenshots/dashboard.png)
+VITE_API_BASE_URL=http://localhost:8080
 ```
 
 ---
@@ -200,16 +191,20 @@ The AI Assistant module is currently under maintenance and will be upgraded in a
 | GET | /dashboard | Dashboard |
 | GET | /transactions | List Transactions |
 | POST | /transactions | Create Transaction |
+| GET | /transactions/{id} | Transaction Details |
 | POST | /refunds | Request Refund |
+| GET | /refunds/{transaction_id} | Refund Status |
 | GET | /tickets | List Tickets |
 | POST | /tickets | Create Ticket |
-| GET | /receipt/{id} | Download Receipt |
+| GET | /receipt/{id} | Download Receipt (PDF) |
+| POST | /assistant/chat | AI Assistant |
+| GET | /admin/dashboard | Admin Summary |
+| GET | /admin/users, /admin/transactions, /admin/refunds, /admin/tickets | Admin Lists |
+| PATCH | /admin/transactions/{id}/status | Update Transaction Status |
+| PATCH | /refunds/admin/{id}/status | Update Refund Status |
+| PATCH | /tickets/admin/{id}/status | Update Ticket Status |
 
-Interactive API Documentation:
-
-```
-http://localhost:8000/docs
-```
+Full list in [`backend/README.md`](backend/README.md).
 
 ---
 
@@ -221,7 +216,6 @@ http://localhost:8000/docs
 - SMS Notifications
 - Cloud Deployment
 - Analytics Dashboard
-- Unit Testing
 
 ---
 
@@ -239,7 +233,7 @@ GitHub:
 https://github.com/Ugesh123
 
 LinkedIn:
-(Add your LinkedIn profile)
+https://www.linkedin.com/in/yada-ugesh-ba602a345
 
 ---
 
